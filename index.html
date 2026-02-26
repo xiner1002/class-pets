@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔡伦造纸记 - 互动体验</title>
+    <style>
+        :root {
+            --primary: #a93226; 
+            --gold: #d4ac0d;
+            --bg: #fdfaf5;      
+            --success: #27ae60;
+            --text: #2c3e50;
+            --wood: #8d6e63;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/y3MPoPE7inaWpSB7mGk8se.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-family: "STKaiti", "KaiTi", "PingFang SC", serif;
+            display: flex; align-items: center; justify-content: center;
+            height: 100vh; width: 100vw; overflow: hidden;
+        }
+
+        #game-container {
+            width: 98vw; max-width: 1100px; height: 92vh;
+            background: var(--bg);
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            border-radius: 24px; position: relative; overflow: hidden;
+            border: 10px solid #2c3e50; display: flex; flex-direction: column;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+        }
+
+        /* 封面 */
+        #cover-page {
+            position: fixed; inset: 0; 
+            background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/ZhCGtFUZKqDGCWrjNRcmCk.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: 2000; display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-end;
+            padding-bottom: 80px;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cover-title { font-size: 100px; color: var(--primary); margin-bottom: 20px; font-weight: bold; font-family: "STKaiti", "KaiTi", "华文行楷", "STXingkai", cursive; }
+        .cover-music-toggle {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: white;
+            border: 3px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2001;
+            font-size: 30px;
+        }
+        .start-btn {
+            padding: 25px 80px; font-size: 36px; background: var(--primary);
+            color: white; border: 4px solid var(--gold); border-radius: 60px;
+            cursor: pointer; font-weight: bold; transition: 0.3s;
+            animation: breathe 2s ease-in-out infinite;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(255, 215, 0, 0.3); }
+        }
+
+        /* 语音开关 */
+        .voice-toggle {
+            position: absolute; top: 20px; right: 20px;
+            width: 60px; height: 60px; background: white;
+            border: 3px solid var(--gold); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1001; font-size: 30px;
+        }
+        .music-toggle {
+            position: absolute; top: 90px; right: 20px;
+            width: 60px; height: 60px; background: white;
+            border: 3px solid var(--gold); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1001; font-size: 30px;
+        }
+
+        .header-nav {
+            flex: 0 0 auto; padding: 25px; background: rgba(255,255,255,0.95);
+            border-bottom: 5px solid var(--gold); text-align: center; z-index: 100;
+        }
+        .header-nav h1 { margin: 0; font-size: 42px; color: var(--primary); }
+        .header-nav p { margin: 10px 0 0 0; font-size: 26px; color: var(--text); font-weight: bold; }
+
+        .stage { flex: 1; position: relative; overflow: hidden; }
+        .scene { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        .scene.active { display: flex; animation: fadeIn 0.4s forwards; }
+
+        /* 第一步：切断 */
+        #scene1 { cursor: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/SXNLNEfEA2MX9PJvAT3b7U.png') 32 64, auto; }
+        .chop-board { width: 700px; height: 380px; background: #d3a36a; border-radius: 20px; position: relative; border: 8px solid #eec494; }
+        .bark-block { width: 500px; height: 140px; background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/YfMFqdfxnGNR7ysvmpPPwM.png'); background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 10px; position: absolute; top: 120px; left: 100px; overflow: hidden; }
+        .cut-line { position: absolute; width: 6px; height: 100%; background: rgba(0,0,0,0.6); }
+        .cleaver { position: fixed; width: 300px; height: 300px; pointer-events: none; z-index: 1000; display: none; background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/SXNLNEfEA2MX9PJvAT3b7U.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
+        .cleaver-blade { display: none; }
+        .cleaver-handle { display: none; }
+
+        /* 毛笔 */
+        .brush { position: fixed; width: 250px; height: 300px; pointer-events: none; z-index: 1000; display: none; background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/fdJRBMitVdhYDVXAvbuVsT.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
+
+        /* 第二步：浸泡 */
+        #scene2 { cursor: none; }
+        .soak-vat {
+            width: 450px; height: 400px; background: #95a5a6; border: 15px solid #7f8c8d;
+            border-radius: 50%; position: relative; overflow: hidden;
+        }
+        .water-fill { position: absolute; bottom: 0; width: 100%; height: 20%; background: rgba(52, 152, 219, 0.8); transition: height 0.5s; }
+        .floating-bark-pieces { 
+            position: absolute; width: 100%; height: 100%; 
+            display: flex; justify-content: center; align-items: center;
+            background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/rcm4PAqV8pV9KU8w4shLQ2.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .bark-piece { font-size: 40px; margin: 5px; transition: 0.5s; }
+        .bucket-container {
+            position: fixed; width: 120px; height: 120px; pointer-events: none; z-index: 1000;
+            display: none; transition: transform 0.3s ease-out; transform-origin: 80% 20%;
+        }
+        .bucket-emoji { font-size: 100px; }
+        .water-stream {
+            position: fixed; width: 25px; height: 0;
+            background: linear-gradient(to bottom, rgba(52, 152, 219, 0.9), rgba(174, 214, 241, 0.4));
+            border-radius: 10px; pointer-events: none; z-index: 999;
+        }
+
+        /* 第三步：捣烂 */
+        .mortar {
+            width: 400px; height: 250px; background: #7f8c8d; border-radius: 0 0 200px 200px; 
+            border: 15px solid #444; position: relative; overflow: hidden; margin-top: 100px;
+        }
+        .pulp-content {
+            position: absolute; bottom: 0; width: 100%; height: 100%;
+            background: #5d4037; transition: background 0.3s, opacity 0.3s;
+            display: flex; flex-wrap: wrap; justify-content: center; align-content: center;
+        }
+        .pulp-particle { width: 28px; height: 28px; background: rgba(0,0,0,0.21); border-radius: 50%; margin: 5px; }
+        .pestle {
+            width: 70px; height: 250px; background: #5d4037; border-radius: 35px; 
+            position: absolute; top: -150px; left: 165px; z-index: 10; transition: transform 0.1s;
+            border-bottom: 10px solid #3e2723;
+        }
+
+        /* 第四步：抄纸 (修复后的动画效果) */
+        .water-pool { 
+            width: 750px; height: 420px; background: #3498db; 
+            border: 20px solid var(--wood); border-radius: 24px; 
+            position: relative; display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.2);
+        }
+        .paper-screen { 
+            width: 480px; height: 300px; border: 15px solid #8d6e63; 
+            background: #d7ccc8; position: relative; cursor: pointer; 
+            transition: transform 0.1s; overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .pulp-layer { 
+            position: absolute; inset: 0; background: #1a5276; 
+            opacity: 0.8; transition: background 0.3s, opacity 0.3s; 
+        }
+
+        /* 第五步：晾晒 */
+        .drying-wall { width: 800px; height: 450px; background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/fTRFapxq79GGhTYVWH6HxZ.png'); background-size: cover; background-position: center; border: 15px solid #7f8c8d; position: relative; display: flex; align-items: center; justify-content: center; }
+        .wet-paper-on-wall { width: 350px; height: 450px; background: #999; box-shadow: 0 0 20px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; transition: 2s; }
+
+        /* 通用 */
+        .progress-box { width: 500px; height: 25px; background: #ddd; border-radius: 15px; margin-top: 40px; overflow: hidden; border: 3px solid #bbb; }
+        .progress-bar { height: 100%; background: var(--success); width: 0%; transition: 0.2s; }
+        .action-corner { display: none; }
+        .next-btn { padding: 15px 45px; border-radius: 15px; border: none; background: #bdc3c7; color: white; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .next-btn.ready { background: var(--success); animation: pulse 2s infinite; }
+        .restart-btn {
+            position: absolute; right: 40px; bottom: 40px; z-index: 500;
+            padding: 15px 45px; border-radius: 15px; border: none;
+            background: var(--primary); color: white; font-size: 28px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            display: none;
+        }
+        .restart-btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        #scene6 .restart-btn { display: block; }
+
+        .pop-up { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .pop-card { background: white; padding: 50px; border-radius: 30px; text-align: center; border: 10px solid var(--gold); max-width: 650px; }
+
+        @keyframes shake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes knifeHit { 0% { transform: translateY(0); } 50% { transform: translateY(60px); } 100% { transform: translateY(0); } }
+        @keyframes waterFlowAnim { 0% { height: 0; opacity: 1; } 80% { height: 400px; opacity: 1; } 100% { height: 450px; opacity: 0; } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* 彩带动画 */
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 20px;
+            top: -20px;
+            z-index: 3000;
+            animation: confettiFall 4s linear forwards;
+        }
+
+        #ink-canvas {
+            background-image: url('https://musk-online.fbcontent.cn/pub-musk-ai-studio/user/upload/20/3GCXnYbnPuCyDDxHcZkdSj.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cleaver" id="custom-cleaver"></div>
+    <div class="brush" id="custom-brush"></div>
+
+    <div class="bucket-container" id="bucket-container">
+        <div class="bucket-emoji">🪣</div>
+    </div>
+    <div class="water-stream" id="water-stream"></div>
+
+    <div id="game-container">
+        <div id="cover-page">
+            <button class="start-btn" onclick="startGame()">开始体验</button>
+            <div class="cover-music-toggle" id="cover-music-toggle" onclick="toggleCoverMusic()">🔇</div>
+        </div>
+
+        <div class="voice-toggle" id="voice-toggle" onclick="toggleVoice()">🔊</div>
+        <div class="music-toggle" id="music-toggle" onclick="toggleMusic()">🎵</div>
+
+        <div class="header-nav">
+            <h1 id="step-title">第一步：原料剪碎或切断</h1>
+            <p id="step-desc">移动鼠标并点击，把树皮、麻头、破布等原料切断！</p>
+        </div>
+
+        <div class="stage">
+            <!-- 1. 切断 -->
+            <div class="scene active" id="scene1" onmousemove="moveKnife(event)" onmousedown="doChop(event)">
+                <div class="chop-board"><div class="bark-block" id="bark-block"></div></div>
+                <div class="progress-box"><div class="progress-bar" id="pb1"></div></div>
+            </div>
+
+            <!-- 2. 浸泡 -->
+            <div class="scene" id="scene2" onmousemove="moveBucket(event)" onmousedown="pourWater()">
+                <div class="soak-vat">
+                    <div class="floating-bark-pieces" id="bark-pieces"></div>
+                    <div class="water-fill" id="water-level"></div>
+                </div>
+                <div class="progress-box"><div class="progress-bar" id="pb2"></div></div>
+            </div>
+
+            <!-- 3. 捣烂 -->
+            <div class="scene" id="scene3">
+                <div style="cursor:pointer; position:relative; width:450px; height:400px; display:flex; flex-direction:column; align-items:center;" onclick="doHit()">
+                    <div id="pestle" class="pestle"></div>
+                    <div id="mortar-obj" class="mortar">
+                        <div id="pulp-content" class="pulp-content"></div>
+                    </div>
+                </div>
+                <div class="progress-box"><div class="progress-bar" id="pb3"></div></div>
+            </div>
+
+            <!-- 4. 抄纸 (修复效果) -->
+            <div class="scene" id="scene4">
+                <div class="water-pool">
+                    <div id="paper-screen" class="paper-screen" onclick="doShake()">
+                        <div id="pulp-layer" class="pulp-layer"></div>
+                    </div>
+                </div>
+                <div class="progress-box"><div class="progress-bar" id="pb4"></div></div>
+            </div>
+
+            <!-- 5. 晾晒 -->
+            <div class="scene" id="scene5">
+                <div class="drying-wall">
+                    <div id="drying-paper" class="wet-paper-on-wall" onclick="startDrying()">点击贴墙晾晒</div>
+                </div>
+                <div class="progress-box"><div class="progress-bar" id="pb5"></div></div>
+            </div>
+
+            <!-- 6. 书写 -->
+            <div class="scene" id="scene6">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%;">
+                    <div style="background:white; padding:15px; border:10px solid var(--gold);"><canvas id="ink-canvas" width="800" height="450"></canvas></div>
+                    <button class="start-btn" style="margin-top:20px;" onclick="resetCanvas()">重新书写</button>
+                </div>
+                <button class="restart-btn" onclick="location.reload()">重新体验</button>
+            </div>
+        </div>
+
+        <div class="action-corner">
+            <button class="next-btn" id="main-next-btn" onclick="handleNextClick()">进行中</button>
+        </div>
+
+        <div class="pop-up" id="pop-up">
+            <div class="pop-card">
+                <h2 style="color:var(--primary); font-size:45px; margin:0;">💡 蔡伦小讲堂 💡</h2>
+                <p id="pop-text" style="font-size:30px; line-height:1.6; margin:30px 0;"></p>
+                <button class="next-btn ready" style="width:100%; padding:20px; font-size:30px;" onclick="closePop()">下一步</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let chopCount = 0, soakProgress = 0, hitCount = 0, shakeCount = 0, dryProgress = 0;
+        let isVoiceEnabled = true;
+        let isMusicEnabled = true;
+        let bgMusic = null;
+        let musicVolumeLevel = 2; // 0:静音, 1:低, 2:中, 3:高
+        let isCoverPage = true; // 是否在封面
+
+        const stepData = [
+            { title: "第一步：原料剪碎或切断", desc: "移动鼠标并点击，把树皮、麻头、破布等原料切断！", info: "切碎是为了破坏植物的硬组织，让纤维露出来。" },
+            { title: "第二步：浸泡碎料", desc: "点击水桶向缸内倒水，浸泡碎料。", info: "长时间浸泡可以洗去杂质，并让纤维变得更加柔软。" },
+            { title: "第三步：捣烂成浆", desc: "点击石臼用力捶打，直到原料变成白色糊状。", info: "捶打能让纤维彻底分离，形成纸浆。看，颜色变白了！" },
+            { title: "第四步：捞出纸浆", desc: "点击竹帘左右晃动，捞起均匀的纸浆。", info: "晃动的手法决定了纸的厚薄是否均匀。" },
+            { title: "第五步：晾晒干燥", desc: "点击纸张，将其贴在墙上晾干。", info: "水分蒸发后，纤维紧紧结合在一起，就变成了纸。" },
+            { title: "🎉 大功告成 🎉", desc: "在你自己造的纸上书写吧！", info: "这就是伟大的中国造纸术！" }
+        ];
+
+        function startGame() {
+            document.getElementById('cover-page').style.transform = 'translateY(-100%)';
+            isCoverPage = false;
+            
+            // 调整背景音乐音量（进入第一步后降低音量）
+            if(bgMusic) {
+                bgMusic.volume = 0.3;
+                // 更新音乐按钮图标为低音量
+                musicVolumeLevel = 1;
+                const volumeLabels = ['🔇', '🔉', '🎵', '🔊'];
+                document.getElementById('music-toggle').innerText = volumeLabels[musicVolumeLevel];
+            }
+            
+            setTimeout(() => speak(stepData[0].title + "。" + stepData[0].desc), 800);
+        }
+
+        function toggleVoice() {
+            isVoiceEnabled = !isVoiceEnabled;
+            document.getElementById('voice-toggle').innerText = isVoiceEnabled ? "🔊" : "🔇";
+            if(!isVoiceEnabled) window.speechSynthesis.cancel();
+        }
+
+        function toggleMusic() {
+            musicVolumeLevel = (musicVolumeLevel + 1) % 4;
+            const volumeLabels = ['🔇', '🔉', '🎵', '🔊'];
+            document.getElementById('music-toggle').innerText = volumeLabels[musicVolumeLevel];
+            
+            if(bgMusic) {
+                if(musicVolumeLevel === 0) {
+                    bgMusic.pause();
+                } else {
+                    // 根据当前是否在封面调整音量
+                    if(isCoverPage) {
+                        bgMusic.volume = 1.0;
+                    } else {
+                        bgMusic.volume = 0.3;
+                    }
+                    bgMusic.play().catch(e => {});
+                }
+            }
+        }
+        
+        function toggleCoverMusic() {
+            musicVolumeLevel = (musicVolumeLevel + 1) % 4;
+            const volumeLabels = ['🔇', '🔉', '🎵', '🔊'];
+            document.getElementById('cover-music-toggle').innerText = volumeLabels[musicVolumeLevel];
+            document.getElementById('music-toggle').innerText = volumeLabels[musicVolumeLevel];
+            
+            if(musicVolumeLevel === 0) {
+                if(bgMusic) {
+                    bgMusic.pause();
+                }
+            } else {
+                if(!bgMusic) {
+                    bgMusic = new Audio('背景音乐.MP3');
+                    bgMusic.loop = true;
+                }
+                bgMusic.volume = 1.0;
+                bgMusic.play().catch(e => {});
+            }
+        }
+        
+        function speak(text) {
+            if(!isVoiceEnabled) return;
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'zh-CN'; window.speechSynthesis.speak(msg);
+        }
+
+        // 第一步：切断
+        function moveKnife(e) {
+            const knife = document.getElementById('custom-cleaver');
+            knife.style.display = 'block';
+            knife.style.left = (e.clientX - 150) + 'px'; knife.style.top = (e.clientY - 225) + 'px';
+        }
+        function doChop() {
+            if(currentStep !== 1 || chopCount >= 20) return;
+            const knife = document.getElementById('custom-cleaver');
+            knife.style.animation = 'none'; void knife.offsetWidth; 
+            knife.style.animation = 'knifeHit 0.1s ease-in';
+            
+            // 播放切割音效
+            const chopSound = new Audio('切树皮.mp3');
+            chopSound.volume = 0.5;
+            chopSound.play().catch(e => {});
+            
+            const bark = document.getElementById('bark-block');
+            const cut = document.createElement('div');
+            cut.className = 'cut-line'; cut.style.left = (chopCount * 24 + 10) + 'px'; 
+            bark.appendChild(cut);
+            chopCount++;
+            document.getElementById('pb1').style.width = (chopCount * 5) + '%';
+            if(chopCount === 20) showPop(stepData[0].info);
+        }
+
+        // 第二步：浸泡
+        function moveBucket(e) {
+            const container = document.getElementById('bucket-container');
+            container.style.display = 'block';
+            container.style.left = (e.clientX - 20) + 'px'; 
+            container.style.top = (e.clientY - 20) + 'px';
+        }
+        function pourWater() {
+            if(currentStep !== 2 || soakProgress >= 100) return;
+            const container = document.getElementById('bucket-container');
+            const stream = document.getElementById('water-stream');
+            container.style.transform = "rotate(-60deg)";
+            
+            // 播放倒水音效
+            const pourSound = new Audio('倒水声.mp3');
+            pourSound.volume = 0.5;
+            pourSound.play().catch(e => {});
+            
+            setTimeout(() => container.style.transform = "rotate(0deg)", 500);
+            soakProgress += 20;
+            document.getElementById('water-level').style.height = (20 + soakProgress * 0.6) + '%';
+            document.getElementById('pb2').style.width = soakProgress + '%';
+            if(soakProgress === 100) showPop(stepData[1].info);
+        }
+
+        // 第三步：捣烂
+        function initMortar() {
+            const content = document.getElementById('pulp-content');
+            content.innerHTML = '';
+            for(let i=0; i<150; i++) {
+                const p = document.createElement('div');
+                p.className = 'pulp-particle';
+                p.style.opacity = Math.random();
+                p.style.position = 'absolute';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.top = Math.random() * 100 + '%';
+                content.appendChild(p);
+            }
+        }
+        function doHit() {
+            if(hitCount >= 100) return;
+            const p = document.getElementById('pestle');
+            const mortar = document.getElementById('mortar-obj');
+            const pulp = document.getElementById('pulp-content');
+            p.style.transform = "translateY(160px)";
+            
+            // 播放捣击音效
+            const hitSound = new Audio('捣击.mp3');
+            hitSound.volume = 0.5;
+            hitSound.play().catch(e => {});
+            
+            setTimeout(() => {
+                p.style.transform = "translateY(0)";
+                mortar.classList.add('shake-anim');
+                setTimeout(() => mortar.classList.remove('shake-anim'), 100);
+            }, 100);
+            hitCount += 10;
+            document.getElementById('pb3').style.width = hitCount + '%';
+            let colorVal = 93 + (hitCount * 1.6); 
+            pulp.style.background = `rgb(${colorVal}, ${colorVal - 30 + hitCount}, ${colorVal - 40 + hitCount})`;
+            document.querySelectorAll('.pulp-particle').forEach(part => {
+                part.style.transform = `scale(${1 - hitCount/100})`;
+                part.style.opacity = 1 - hitCount/100;
+            });
+            if(hitCount === 100) showPop(stepData[2].info);
+        }
+
+        // 第四步：抄纸 (逻辑修复)
+        function doShake() {
+            if(shakeCount >= 100) return;
+            const screen = document.getElementById('paper-screen');
+            const pulp = document.getElementById('pulp-layer');
+            
+            // 播放竹帘拨水音效（使用AudioContext放大音量）
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const shakeSound = new Audio('竹帘拨水.mp3');
+            const source = audioContext.createMediaElementSource(shakeSound);
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = 2.0;
+            source.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            shakeSound.play().catch(e => {});
+            
+            screen.style.transform = "translateX(30px)";
+            setTimeout(() => screen.style.transform = "translateX(-30px)", 100);
+            setTimeout(() => screen.style.transform = "translateX(0)", 200);
+            
+            shakeCount += 10;
+            document.getElementById('pb4').style.width = shakeCount + '%';
+            
+            // 颜色从深蓝渐变到白色
+            const progress = shakeCount / 100;
+            const r = Math.round(26 + (255 - 26) * progress);
+            const g = Math.round(82 + (255 - 82) * progress);
+            const b = Math.round(118 + (255 - 118) * progress);
+            pulp.style.background = `rgb(${r}, ${g}, ${b})`;
+            pulp.style.opacity = 0.8 + 0.2 * progress;
+
+            if(shakeCount === 100) showPop(stepData[3].info);
+        }
+
+        // 第五步：晾晒
+        function startDrying() {
+            if(dryProgress > 0) return;
+            const paper = document.getElementById('drying-paper');
+            paper.innerText = "正在晾晒...";
+            
+            // 播放晾干音效
+            const drySound = new Audio('晾干.mp3');
+            drySound.volume = 1.0;
+            drySound.play().catch(e => {});
+            
+            const timer = setInterval(() => {
+                dryProgress += 5;
+                document.getElementById('pb5').style.width = dryProgress + '%';
+                paper.style.background = `rgb(${153 + dryProgress}, ${153 + dryProgress}, ${153 + dryProgress})`;
+                if(dryProgress >= 100) {
+                    clearInterval(timer);
+                    paper.innerText = "纸张已干！";
+                    paper.style.background = "white";
+                    showPop(stepData[4].info);
+                }
+            }, 100);
+        }
+
+        function updateBtn() {
+            const btn = document.getElementById('main-next-btn');
+            if(currentStep === 6) { btn.innerText = "重新开始"; btn.classList.add('ready'); return; }
+            const finished = (currentStep === 1 && chopCount >= 20) || 
+                             (currentStep === 2 && soakProgress >= 100) ||
+                             (currentStep === 3 && hitCount >= 100) ||
+                             (currentStep === 4 && shakeCount >= 100) ||
+                             (currentStep === 5 && dryProgress >= 100);
+            if(finished) { btn.innerText = "下一步 ➔"; btn.classList.add('ready'); }
+            else { btn.innerText = "进行中"; btn.classList.remove('ready'); }
+        }
+
+        function handleNextClick() {
+            if(currentStep === 6) { location.reload(); return; }
+            if(document.getElementById('main-next-btn').classList.contains('ready')) { jumpTo(currentStep + 1); }
+        }
+
+        function jumpTo(step) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById(`scene${step}`).classList.add('active');
+            currentStep = step;
+            document.getElementById('step-title').innerText = stepData[step-1].title;
+            document.getElementById('step-desc').innerText = stepData[step-1].desc;
+            
+            document.getElementById('custom-cleaver').style.display = 'none';
+            document.getElementById('bucket-container').style.display = 'none';
+            document.getElementById('water-stream').style.opacity = '0';
+            document.getElementById('custom-brush').style.display = 'none';
+            
+            if(step === 3) initMortar();
+            updateBtn();
+            
+            // 语音播报时，去掉emoji符号
+            const titleText = stepData[step-1].title.replace(/[^\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g, '');
+            speak(titleText + "。" + stepData[step-1].desc);
+            
+            if(step === 6) {
+                initCanvas();
+                launchConfetti();
+                // 播放庆祝音效
+                const celebrateSound = new Audio('https://1500019226.vod2.myqcloud.com/6cae817cvodcq1500019226/67d43f9b5145403710597711118/BUB7Tg3gz3IA.mp3');
+                celebrateSound.volume = 1.0;
+                celebrateSound.play().catch(e => {});
+            }
+        }
+
+        function showPop(text) {
+            document.getElementById('pop-text').innerText = text;
+            document.getElementById('pop-up').style.display = 'flex';
+            speak(text); updateBtn();
+        }
+        function closePop() { 
+            document.getElementById('pop-up').style.display = 'none';
+            if(currentStep < 6) {
+                jumpTo(currentStep + 1);
+            }
+        }
+
+        // 画布逻辑
+        let canvas, ctx, drawing = false;
+        function initCanvas() {
+            canvas = document.getElementById('ink-canvas');
+            ctx = canvas.getContext('2d');
+            ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.strokeStyle = '#1a1a1a';
+            
+            const brush = document.getElementById('custom-brush');
+            brush.style.display = 'block';
+            
+            const getPos = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return [(clientX - rect.left) * scaleX, (clientY - rect.top) * scaleY];
+            };
+            canvas.onmousedown = (e) => { drawing = true; ctx.beginPath(); const [x,y] = getPos(e); ctx.moveTo(x,y); };
+            canvas.onmousemove = (e) => { 
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                brush.style.left = (clientX - 125) + 'px'; 
+                brush.style.top = (clientY - 225) + 'px';
+                if(drawing) { const [x,y] = getPos(e); ctx.lineTo(x,y); ctx.stroke(); } 
+            };
+            window.onmouseup = () => drawing = false;
+        }
+        function resetCanvas() { if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+        function launchConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#8800ff'];
+            for(let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (3 + Math.random() * 2) + 's';
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 4000);
+                }, i * 5);
+            }
+        }
+    </script>
+</body>
+</html>
